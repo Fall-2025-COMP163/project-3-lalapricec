@@ -127,11 +127,44 @@ This project encourages creativity! Here's what you can customize:
 
 Document your project with:
 
-1. **Module Architecture:** Explain your module organization
-2. **Exception Strategy:** Describe when/why you raise specific exceptions
-3. **Design Choices:** Justify major decisions
-4. **AI Usage:** Detail what AI assistance you used
-5. **How to Play:** Instructions for running the game
+# Quest Chronicles – Project Summary
+
+## 1. Module Architecture
+- **custom_exceptions.py** – All custom exception classes used throughout the project.
+- **game_data.py** – Loads items, quests, and save files; creates default data if missing.
+- **character_manager.py** – Handles character creation, saving/loading, leveling, and stat updates.
+- **inventory_system.py** – Manages inventory actions such as using items, equipping gear, and selling/buying.
+- **quest_handler.py** – Controls quest flow: available, active, and completed quests.
+- **combat_system.py** – Runs turn-based combat with required enemies (goblin, orc, dragon).
+- **main.py** – Connects all modules, runs menus, game loop, and handles errors.
+
+## 2. Exception Strategy
+Each module raises specific exceptions:
+- **Data errors:** MissingDataFileError, InvalidDataFormatError, CorruptedDataError  
+- **Character errors:** InvalidCharacterClassError, CharacterNotFoundError, CharacterDeadError  
+- **Inventory errors:** ItemNotFoundError, InvalidItemTypeError  
+- **Quest errors:** QuestNotFoundError, QuestNotActiveError  
+These allow `main.py` to handle problems cleanly without crashing.
+
+## 3. Design Choices
+- Modular structure for clarity and easy debugging.
+- Character stored as a dictionary for simple saving/loading.
+- Clean turn-based combat system.
+- Data stored in simple text files for readability.
+- Custom exceptions used consistently across modules.
+
+## 4. AI Usage
+AI was used to help debug errors, format and organize code, and ensure modules met project requirements.  
+All logic was reviewed and adapted manually to fit the assignment.
+
+## 5. How to Play
+1. Run the game:  
+   `python main.py`
+2. Choose:
+   - **New Game** to create a character  
+   - **Load Game** to load a save  
+   - **Exit** to quit  
+3. In-game options include viewing stats, managing inventory, completing quests, exploring, combat, shopping, and saving.
 
 ### What to Submit:
 
