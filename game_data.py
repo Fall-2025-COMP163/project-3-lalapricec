@@ -4,7 +4,7 @@ Game Data Module - Starter Code
 
 Name: Lauren Price
 
-AI Usage: used to check for errors and understanding sections of code
+AI Usage: used to check for errors and understanding sections of code.
 
 This module handles loading and validating game data from text files.
 """
