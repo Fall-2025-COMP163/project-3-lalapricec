@@ -4,7 +4,7 @@ Main Game Module - Starter Code
 
 Name: Lauren Price
 
-AI Usage: used to check for errors and formatting
+AI Usage: used to check for errors and formatting.
 
 This is the main game file that ties all modules together.
 Demonstrates module integration and complete game flow.
@@ -693,4 +693,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
