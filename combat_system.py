@@ -4,7 +4,7 @@ Combat System Module - Starter Code
 
 Name: Lauren Price
 
-AI Usage: used to check for errors and formatting
+AI Usage: used to check for errors and formatting.
 
 Handles combat mechanics
 """
