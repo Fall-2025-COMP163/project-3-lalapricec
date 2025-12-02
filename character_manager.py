@@ -4,7 +4,7 @@ Character Manager Module - Starter Code
 
 Name: Lauren Price
 
-AI Usage: AI assistance was used formatting and understsnding sections of the code.
+AI Usage: used to check for errors
 
 This module handles character creation, loading, and saving.
 """
@@ -34,36 +34,30 @@ def create_character(name, character_class):
     
     Raises: InvalidCharacterClassError if class is not valid
     """
-    valid_classes = ["Warrior", "Mage", "Rogue", "Cleric"]
+    # TODO: Implement character creation
+    valid_classes = {
+        "Warrior": {"health": 120, "strength": 15, "magic": 5},
+        "Mage": {"health": 80, "strength": 8, "magic": 20},
+        "Rogue": {"health": 90, "strength": 12, "magic": 10},
+        "Cleric": {"health": 100, "strength": 10, "magic": 15}
+    }
+
     if character_class not in valid_classes:
-        raise InvalidCharacterClassError(f"Invalid character class: {character_class}")
+        raise InvalidCharacterClassError(
+            f"'{character_class}' is not a valid class. "
+            f"Valid classes: {', '.join(valid_classes.keys())}"
+        )
 
-    # Base stats by class
-    if character_class == "Warrior":
-        max_health = 120
-        strength = 15
-        magic = 5
-    elif character_class == "Mage":
-        max_health = 80
-        strength = 8
-        magic = 20
-    elif character_class == "Rogue":
-        max_health = 90
-        strength = 12
-        magic = 10
-    elif character_class == "Cleric":
-        max_health = 100
-        strength = 10
-        magic = 15
+    stats = valid_classes[character_class]
 
-    character = {
+    return {
         "name": name,
         "class": character_class,
         "level": 1,
-        "health": max_health,
-        "max_health": max_health,
-        "strength": strength,
-        "magic": magic,
+        "health": stats["health"],
+        "max_health": stats["health"],
+        "strength": stats["strength"],
+        "magic": stats["magic"],
         "experience": 0,
         "gold": 100,
         "inventory": [],
@@ -71,11 +65,15 @@ def create_character(name, character_class):
         "completed_quests": []
     }
 
-    # Optional: validate before returning
-    validate_character_data(character)
-
-    return character
-
+    # Validate character_class first
+    # Example base stats:
+    # Warrior: health=120, strength=15, magic=5
+    # Mage: health=80, strength=8, magic=20
+    # Rogue: health=90, strength=12, magic=10
+    # Cleric: health=100, strength=10, magic=15
+    # All characters start with:
+    # - level=1, experience=0, gold=100
+    # - inventory=[], active_quests=[], completed_quests=[]
 
 def save_character(character, save_directory="data/save_games"):
     """
@@ -100,35 +98,25 @@ def save_character(character, save_directory="data/save_games"):
     Returns: True if successful
     Raises: PermissionError, IOError (let them propagate or handle)
     """
-    # Ensure directory exists
-    if not os.path.exists(save_directory):
-        os.makedirs(save_directory)
+    os.makedirs(save_directory, exist_ok=True)
+    filename = os.path.join(save_directory, f"{character['name']}_save.txt")
 
-    filename = f"{character['name']}_save.txt"
-    filepath = os.path.join(save_directory, filename)
-
-    # Lists saved as comma-separated values
-    inventory_str = ",".join(character.get("inventory", []))
-    active_str = ",".join(character.get("active_quests", []))
-    completed_str = ",".join(character.get("completed_quests", []))
-
-    # Any file I/O errors will propagate, as allowed in the spec
-    with open(filepath, "w") as f:
-        f.write(f"NAME: {character['name']}\n")
-        f.write(f"CLASS: {character['class']}\n")
-        f.write(f"LEVEL: {character['level']}\n")
-        f.write(f"HEALTH: {character['health']}\n")
-        f.write(f"MAX_HEALTH: {character['max_health']}\n")
-        f.write(f"STRENGTH: {character['strength']}\n")
-        f.write(f"MAGIC: {character['magic']}\n")
-        f.write(f"EXPERIENCE: {character['experience']}\n")
-        f.write(f"GOLD: {character['gold']}\n")
-        f.write(f"INVENTORY: {inventory_str}\n")
-        f.write(f"ACTIVE_QUESTS: {active_str}\n")
-        f.write(f"COMPLETED_QUESTS: {completed_str}\n")
-
-    return True
-
+    try:
+        with open(filename, "w", encoding="utf-8") as f:
+            for key, value in character.items():
+                key_str = key.upper()  # required by tests
+                f.write(f"{key_str}: {value}\n")
+        return True
+    except Exception as e:
+        raise SaveFileCorruptedError(str(e))
+    
+    except Exception as e:
+        raise SaveFileCorruptedError(str(e))
+    
+    # TODO: Implement save functionality
+    # Create save_directory if it doesn't exist
+    # Handle any file I/O errors appropriately
+    # Lists should be saved as comma-separated values
 
 def load_character(character_name, save_directory="data/save_games"):
     """
@@ -144,76 +132,57 @@ def load_character(character_name, save_directory="data/save_games"):
         SaveFileCorruptedError if file exists but can't be read
         InvalidSaveDataError if data format is wrong
     """
-    filename = f"{character_name}_save.txt"
-    filepath = os.path.join(save_directory, filename)
+    # TODO: Implement load functionality
+    filename = os.path.join(save_directory, f"{character_name}_save.txt")
 
-    if not os.path.exists(filepath):
-        raise CharacterNotFoundError(f"Character not found: {character_name}")
+    if not os.path.exists(filename):
+        raise CharacterNotFoundError(f"No save found for {character_name}.")
 
     try:
-        with open(filepath, "r") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             lines = f.readlines()
-    except OSError:
-        # File exists but can't be read properly
-        raise SaveFileCorruptedError(f"Could not read save file for {character_name}")
+    except Exception as e:
+        raise SaveFileCorruptedError(str(e))
 
-    if not lines:
-        raise InvalidSaveDataError("Save file is empty")
+    data = {}
 
-    raw_data = {}
-
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        # Expect "KEY: value"
-        if ":" not in line:
-            raise InvalidSaveDataError(f"Invalid line format: {line}")
-        key, value = line.split(":", 1)
-        raw_data[key.strip()] = value.strip()
-
-    # Required keys in the save file (uppercase)
-    required_keys = [
-        "NAME", "CLASS", "LEVEL", "HEALTH", "MAX_HEALTH",
-        "STRENGTH", "MAGIC", "EXPERIENCE", "GOLD",
-        "INVENTORY", "ACTIVE_QUESTS", "COMPLETED_QUESTS"
-    ]
-
-    for key in required_keys:
-        if key not in raw_data:
-            raise InvalidSaveDataError(f"Missing field in save file: {key}")
-
-    # Build the character dict, converting types appropriately
     try:
-        character = {
-            "name": raw_data["NAME"],
-            "class": raw_data["CLASS"],
-            "level": int(raw_data["LEVEL"]),
-            "health": int(raw_data["HEALTH"]),
-            "max_health": int(raw_data["MAX_HEALTH"]),
-            "strength": int(raw_data["STRENGTH"]),
-            "magic": int(raw_data["MAGIC"]),
-            "experience": int(raw_data["EXPERIENCE"]),
-            "gold": int(raw_data["GOLD"]),
-            "inventory": _parse_list_field(raw_data["INVENTORY"]),
-            "active_quests": _parse_list_field(raw_data["ACTIVE_QUESTS"]),
-            "completed_quests": _parse_list_field(raw_data["COMPLETED_QUESTS"]),
-        }
-    except (ValueError, TypeError):
-        raise InvalidSaveDataError("Invalid numeric value in save data")
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
 
-    # Validate structure
-    validate_character_data(character)
+            if ": " not in line:
+                raise InvalidSaveDataError("Invalid line in save file.")
+
+            key, value = line.split(": ", 1)
+            key = key.strip().lower()
+            data[key] = value.strip()
+    except InvalidSaveDataError:
+        raise
+    except Exception as e:
+        raise SaveFileCorruptedError(str(e))
+
+    # Convert lists saved as strings
+    def parse_list(value):
+        return [] if value == "" else [x for x in value.split(",")]
+
+    character = {
+        "name": data["name"],
+        "class": data["class"],
+        "level": int(data["level"]),
+        "health": int(data["health"]),
+        "max_health": int(data["max_health"]),
+        "strength": int(data["strength"]),
+        "magic": int(data["magic"]),
+        "experience": int(data["experience"]),
+        "gold": int(data["gold"]),
+        "inventory": parse_list(data.get("inventory", "")),
+        "active_quests": parse_list(data.get("active_quests", "")),
+        "completed_quests": parse_list(data.get("completed_quests", ""))
+    }
 
     return character
-
-
-def _parse_list_field(value):
-    """Helper: parse comma-separated string into list."""
-    value = value.strip()
-    if value == "":
-        return []
-    return [item.strip() for item in value.split(",")]
 
 
 def list_saved_characters(save_directory="data/save_games"):
@@ -222,18 +191,22 @@ def list_saved_characters(save_directory="data/save_games"):
     
     Returns: List of character names (without _save.txt extension)
     """
+    # TODO: Implement this function
     if not os.path.exists(save_directory):
         return []
 
-    names = []
-    for filename in os.listdir(save_directory):
-        if filename.endswith("_save.txt"):
-            # Remove the "_save.txt" (9 characters)
-            name = filename[:-9]
-            names.append(name)
+    entries = []
+    try:
+        for fn in os.listdir(save_directory):
+            if fn.endswith("_save.txt"):
+                entries.append(fn[:-9])  # remove "_save.txt"
+    except Exception:
+        # If directory can't be read, return empty list rather than crashing
+        return []
 
-    return names
-
+    return entries
+    # Return empty list if directory doesn't exist
+    # Extract character names from filenames
 
 def delete_character(character_name, save_directory="data/save_games"):
     """
@@ -242,14 +215,16 @@ def delete_character(character_name, save_directory="data/save_games"):
     Returns: True if deleted successfully
     Raises: CharacterNotFoundError if character doesn't exist
     """
-    filename = f"{character_name}_save.txt"
-    filepath = os.path.join(save_directory, filename)
+    filename = os.path.join(save_directory, f"{character_name}_save.txt")
 
-    if not os.path.exists(filepath):
-        raise CharacterNotFoundError(f"Character not found: {character_name}")
+    if not os.path.exists(filename):
+        raise CharacterNotFoundError(f"{character_name} does not exist.")
 
-    os.remove(filepath)
+    os.remove(filename)
     return True
+
+    # TODO: Implement character deletion
+    # Verify file exists before attempting deletion
 
 # ============================================================================
 # CHARACTER OPERATIONS
@@ -269,28 +244,28 @@ def gain_experience(character, xp_amount):
     
     Raises: CharacterDeadError if character health is 0
     """
-    if character.get("health", 0) <= 0:
-        raise CharacterDeadError("Dead characters cannot gain experience")
-
-    if xp_amount < 0:
-        xp_amount = 0
+    if character["health"] <= 0:
+        raise CharacterDeadError("Cannot gain XP while dead.")
 
     character["experience"] += xp_amount
 
-    # Level up as many times as needed
-    leveled_up = True
-    while leveled_up:
-        leveled_up = False
-        level = character["level"]
-        required_xp = level * 100
-        if character["experience"] >= required_xp:
-            character["level"] += 1
-            character["max_health"] += 10
-            character["strength"] += 2
-            character["magic"] += 2
-            character["health"] = character["max_health"]
-            leveled_up = True
+    leveled_up = False
 
+    while character["experience"] >= character["level"] * 100:
+        character["experience"] -= character["level"] * 100
+        character["level"] += 1
+        character["max_health"] += 10
+        character["strength"] += 2
+        character["magic"] += 2
+        character["health"] = character["max_health"]
+        leveled_up = True
+
+    return leveled_up
+    # TODO: Implement experience gain and leveling
+    # Check if character is dead first
+    # Add experience
+    # Check for level up (can level up multiple times)
+    # Update stats on level up
 
 def add_gold(character, amount):
     """
@@ -303,15 +278,17 @@ def add_gold(character, amount):
     Returns: New gold total
     Raises: ValueError if result would be negative
     """
-    current_gold = character.get("gold", 0)
-    new_gold = current_gold + amount
+    new_total = character["gold"] + amount
 
-    if new_gold < 0:
-        raise ValueError("Gold cannot be negative")
+    if new_total < 0:
+        raise ValueError("Gold cannot go negative.")
 
-    character["gold"] = new_gold
-    return new_gold
+    character["gold"] = new_total
+    return character["gold"]
 
+    # TODO: Implement gold management
+    # Check that result won't be negative
+    # Update character's gold
 
 def heal_character(character, amount):
     """
@@ -321,21 +298,16 @@ def heal_character(character, amount):
     
     Returns: Actual amount healed
     """
-    if amount < 0:
-        amount = 0
+    if character["health"] <= 0:
+        raise CharacterDeadError("Cannot heal a dead character.")
 
-    current_health = character.get("health", 0)
-    max_health = character.get("max_health", 0)
+    original = character["health"]
+    character["health"] = min(character["health"] + amount, character["max_health"])
+    return character["health"] - original
 
-    new_health = current_health + amount
-    if new_health > max_health:
-        new_health = max_health
-
-    healed = new_health - current_health
-    character["health"] = new_health
-
-    return healed
-
+    # TODO: Implement healing
+    # Calculate actual healing (don't exceed max_health)
+    # Update character health
 
 def is_character_dead(character):
     """
@@ -343,8 +315,9 @@ def is_character_dead(character):
     
     Returns: True if dead, False if alive
     """
-    return character.get("health", 0) <= 0
+    return character["health"] <= 0
 
+    # TODO: Implement death check
 
 def revive_character(character):
     """
@@ -352,16 +325,14 @@ def revive_character(character):
     
     Returns: True if revived
     """
-    if not is_character_dead(character):
+    if character["health"] > 0:
         return False
+    
+    character["health"] = character["max_health"] // 2
 
-    max_health = character.get("max_health", 0)
-    half_health = max_health // 2
-    if half_health <= 0:
-        half_health = 1
-
-    character["health"] = half_health
     return True
+    # TODO: Implement revival
+    # Restore health to half of max_health
 
 # ============================================================================
 # VALIDATION
@@ -378,32 +349,31 @@ def validate_character_data(character):
     Returns: True if valid
     Raises: InvalidSaveDataError if missing fields or invalid types
     """
-    required_fields = [
+    required = [
         "name", "class", "level", "health", "max_health",
         "strength", "magic", "experience", "gold",
         "inventory", "active_quests", "completed_quests"
     ]
 
-    for field in required_fields:
-        if field not in character:
-            raise InvalidSaveDataError(f"Missing field: {field}")
+    for key in required:
+        if key not in character:
+            raise InvalidSaveDataError(f"Missing field: {key}")
 
-    # Check numeric fields
-    numeric_fields = [
-        "level", "health", "max_health",
-        "strength", "magic", "experience", "gold"
-    ]
-    for field in numeric_fields:
+    for field in ["level", "health", "max_health", "strength", "magic", "experience", "gold"]:
         if not isinstance(character[field], int):
-            raise InvalidSaveDataError(f"Field {field} must be an integer")
+            raise InvalidSaveDataError(f"Field {field} must be an integer.")
 
-    # Check list fields
-    list_fields = ["inventory", "active_quests", "completed_quests"]
-    for field in list_fields:
+    for field in ["inventory", "active_quests", "completed_quests"]:
         if not isinstance(character[field], list):
-            raise InvalidSaveDataError(f"Field {field} must be a list")
+            raise InvalidSaveDataError(f"Field {field} must be a list.")
 
     return True
+
+    # TODO: Implement validation
+    # Check all required keys exist
+    # Check that numeric values are numbers
+    # Check that lists are actually lists
+
 
 # ============================================================================
 # TESTING
@@ -413,12 +383,23 @@ if __name__ == "__main__":
     print("=== CHARACTER MANAGER TEST ===")
     
     # Test character creation
+    try:
+        char = create_character("Lily", "Healer")
+        print("Created:", char)
+    except Exception as e:
+        print("Error:", e)
     # try:
     #     char = create_character("TestHero", "Warrior")
     #     print(f"Created: {char['name']} the {char['class']}")
     #     print(f"Stats: HP={char['health']}, STR={char['strength']}, MAG={char['magic']}")
     # except InvalidCharacterClassError as e:
     #     print(f"Invalid class: {e}")
+    
+    try:
+        save_character(char)
+        print("Character saved successfully")
+    except Exception as e:
+        print(f"Save error: {e}")
     
     # Test saving
     # try:
@@ -427,6 +408,13 @@ if __name__ == "__main__":
     # except Exception as e:
     #     print(f"Save error: {e}")
     
+    try:
+        loaded = load_character("TestHero")
+        print(f"Loaded: {loaded['name']}")
+    except CharacterNotFoundError:
+        print("Character not found")
+    except SaveFileCorruptedError:
+        print("Save file corrupted")
     # Test loading
     # try:
     #     loaded = load_character("TestHero")
