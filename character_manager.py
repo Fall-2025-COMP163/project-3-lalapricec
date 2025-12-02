@@ -4,7 +4,7 @@ Character Manager Module - Starter Code
 
 Name: Lauren Price
 
-AI Usage: used to check for errors
+AI Usage: used to check for errors.
 
 This module handles character creation, loading, and saving.
 """
